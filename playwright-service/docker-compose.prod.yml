@@ -1,0 +1,54 @@
+# Docker Compose for production (DigitalOcean 4GB RAM / 2 CPU)
+# Connects to existing PostgreSQL instance (Supabase)
+# Add this service to your existing docker-compose on the droplet
+
+version: '3.8'
+
+services:
+  playwright-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}  # Use existing PostgreSQL connection string
+      - PGBOUNCER_MODE=${PGBOUNCER_MODE:-true}  # Set to true for Supabase/PgBouncer
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - API_KEY=${API_KEY}
+      - PLAYWRIGHT_TIMEOUT=30000
+      - DOWNLOAD_DIR=/app/downloads
+      - SCREENSHOT_DIR=/app/screenshots
+      - SESSION_DIR=/app/sessions
+      - LOG_LEVEL=INFO
+      - SCREENSHOT_RETENTION_DAYS=7
+      # CORS - set to your n8n/frontend URLs if needed
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8000,http://localhost:3000}
+      # Xero credentials for automated login
+      - XERO_EMAIL=${XERO_EMAIL}
+      - XERO_PASSWORD=${XERO_PASSWORD}
+      - XERO_SECURITY_ANSWER_1=${XERO_SECURITY_ANSWER_1}
+      - XERO_SECURITY_ANSWER_2=${XERO_SECURITY_ANSWER_2}
+      - XERO_SECURITY_ANSWER_3=${XERO_SECURITY_ANSWER_3}
+    volumes:
+      - playwright_downloads:/app/downloads
+      - playwright_screenshots:/app/screenshots
+      - playwright_sessions:/app/sessions
+    # Shared memory: Chromium needs this for rendering.
+    # 2gb is sufficient for a single browser instance on 4GB RAM droplet.
+    shm_size: '2gb'
+    # Resource limits to prevent OOM killing the host
+    deploy:
+      resources:
+        limits:
+          memory: 3G  # Leave ~1GB for the OS and Docker
+        reservations:
+          memory: 1G
+    # Uses default docker compose network
+
+volumes:
+  playwright_downloads:
+  playwright_screenshots:
+  playwright_sessions:

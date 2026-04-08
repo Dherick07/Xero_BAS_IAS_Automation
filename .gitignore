@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+~$*
+
+# Downloads / temp
+playwright-service/downloads/*
+!playwright-service/downloads/.gitkeep
+playwright-service/screenshots/*
+!playwright-service/screenshots/.gitkeep
+playwright-service/sessions/*
+!playwright-service/sessions/.gitkeep
+
+# Node
+node_modules/
+
+# Logs
+*.log

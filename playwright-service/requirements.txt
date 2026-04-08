@@ -1,0 +1,40 @@
+# FastAPI and server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Patchright for browser automation (patched Playwright drop-in replacement)
+# Fixes Runtime.enable CDP leak that Akamai bot detection checks for.
+# Drop-in replacement: same API as playwright, just change the import.
+patchright
+
+# Database
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.25
+psycopg2-binary==2.9.9
+
+# Security and encryption
+cryptography==41.0.7
+python-jose[cryptography]==3.3.0
+
+# Utilities
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+httpx==0.26.0
+
+# Logging
+structlog==24.1.0
+
+# Excel processing
+openpyxl==3.1.2
+
+# System tray app
+pystray==0.19.5
+Pillow>=10.0.0
+
+# Desktop shortcut creation (Windows only, used by create_shortcut.py)
+pywin32>=306
+
+# Email (fallback notification when Asana update fails)
+aiosmtplib>=3.0.0

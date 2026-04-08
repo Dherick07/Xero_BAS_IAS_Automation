@@ -1,0 +1,66 @@
+# Docker Compose for local development
+# Includes PostgreSQL for standalone development
+
+version: '3.8'
+
+services:
+  playwright-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://xero_user:xero_password@postgres:5432/xero_automation
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-lN1Hn0a_yf6od-Zqad6UxpJeqD3ySQniFshOhS-W8UM=}
+      - API_KEY=${API_KEY:-dev-api-key}
+      - PLAYWRIGHT_TIMEOUT=30000
+      - DOWNLOAD_DIR=/app/downloads
+      - SCREENSHOT_DIR=/app/screenshots
+      - SESSION_DIR=/app/sessions
+      - LOG_LEVEL=INFO
+      # Xero credentials for automated login
+      - XERO_EMAIL=${XERO_EMAIL}
+      - XERO_PASSWORD=${XERO_PASSWORD}
+      - XERO_SECURITY_ANSWER_1=${XERO_SECURITY_ANSWER_1}
+      - XERO_SECURITY_ANSWER_2=${XERO_SECURITY_ANSWER_2}
+      - XERO_SECURITY_ANSWER_3=${XERO_SECURITY_ANSWER_3}
+    volumes:
+      - ./downloads:/app/downloads
+      - ./screenshots:/app/screenshots
+      - ./sessions:/app/sessions
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Shared memory: Chromium needs this for rendering (prevents partial page loads)
+    shm_size: '2gb'
+    networks:
+      - xero-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: xero-postgres
+    environment:
+      - POSTGRES_USER=xero_user
+      - POSTGRES_PASSWORD=xero_password
+      - POSTGRES_DB=xero_automation
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xero_user -d xero_automation"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xero-network
+
+volumes:
+  postgres_data:
+
+networks:
+  xero-network:
+    driver: bridge

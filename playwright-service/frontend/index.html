@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xero BAS/IAS Automation</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <!-- Main form card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h1>Xero Reports</h1>
+        <p class="subtitle">Download consolidated IAS/BAS reports from Xero</p>
+      </div>
+      <div class="header-actions">
+        <span id="auth-badge" class="status-badge">
+          <span class="dot"></span> Checking...
+        </span>
+        <button id="login-btn" class="login-btn" style="display:none">Login</button>
+      </div>
+    </div>
+    <p id="login-instruction" class="login-hint" style="display:none"></p>
+
+    <!-- Report Type Toggle -->
+    <div class="form-group">
+      <label>Report Type</label>
+      <div class="toggle-row">
+        <button id="btn-ias" class="toggle-btn active" data-type="ias">IAS (Monthly)</button>
+        <button id="btn-bas" class="toggle-btn" data-type="bas">BAS (Quarterly)</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="org-input">Organisation</label>
+      <input
+        id="org-input"
+        list="clients-list"
+        type="text"
+        placeholder="Search or type organisation name..."
+        autocomplete="off"
+      />
+      <datalist id="clients-list"></datalist>
+      <!-- Client info display for BAS -->
+      <div id="client-info" class="client-info" style="display:none"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Period</label>
+      <div class="period-row">
+        <!-- Month selector (IAS mode) -->
+        <div class="form-group" id="month-group">
+          <select id="month-select">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3" selected>March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <!-- Quarter selector (BAS mode, hidden by default) -->
+        <div class="form-group" id="quarter-group" style="display:none">
+          <select id="quarter-select">
+            <option value="9">Q1 (Jul-Sep)</option>
+            <option value="12">Q2 (Oct-Dec)</option>
+            <option value="3" selected>Q3 (Jan-Mar)</option>
+            <option value="6">Q4 (Apr-Jun)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <select id="year-select">
+            <!-- Populated by app.js -->
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button id="run-btn">Run Report</button>
+  </div>
+
+  <!-- Progress card -->
+  <div class="card" id="progress-section">
+    <h2>Progress</h2>
+    <ul class="step-log" id="step-log"></ul>
+    <div class="result-box" id="result-box" style="display:none"></div>
+  </div>
+
+  <!-- Recent runs card -->
+  <div class="card">
+    <h2>Recent Runs</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="runs-tbody">
+        <tr class="empty-row"><td colspan="4">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
