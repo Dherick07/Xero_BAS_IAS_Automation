@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_fallback_email: str = ""
 
+    # Asana
+    asana_api_key: str = ""               # Personal Access Token
+
     # Asana — IAS
     ias_asana_section_gid: str = ""       # IAS "Ready to Export" section
     ias_asana_reassignee_gid: str = ""    # Person to reassign IAS tasks to
