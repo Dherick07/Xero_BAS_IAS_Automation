@@ -35,14 +35,9 @@
 
     <div class="form-group">
       <label for="org-input">Organisation</label>
-      <input
-        id="org-input"
-        list="clients-list"
-        type="text"
-        placeholder="Search or type organisation name..."
-        autocomplete="off"
-      />
-      <datalist id="clients-list"></datalist>
+      <select id="org-input">
+        <option value="">— Select organisation —</option>
+      </select>
       <!-- Client info display for BAS -->
       <div id="client-info" class="client-info" style="display:none"></div>
     </div>
@@ -85,6 +80,9 @@
     </div>
 
     <button id="run-btn">Run Report</button>
+    <p id="login-required-hint" class="login-hint" style="display:none">
+      ⚠ You must be logged in to Xero before running reports. Use the Login button above.
+    </p>
   </div>
 
   <!-- Progress card -->
