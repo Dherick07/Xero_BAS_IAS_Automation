@@ -104,6 +104,7 @@ async def run_report_job(
                 kwargs["find_unfiled"] = False
                 kwargs["month"] = month
                 kwargs["year"] = year
+                kwargs["is_quarterly"] = profile.report_type == "bas"
             else:
                 # Standard reporting URL-based reports use month/year
                 kwargs["month"] = month
