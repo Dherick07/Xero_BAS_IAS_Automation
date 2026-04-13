@@ -929,7 +929,8 @@ class XeroAutomation:
         period: str = None,
         tenant_shortcode: str = None,
         month: Optional[int] = None,
-        year: Optional[int] = None
+        year: Optional[int] = None,
+        is_quarterly: bool = False
     ) -> dict:
         """
         Download the Activity Statement (BAS Report).
@@ -965,11 +966,22 @@ class XeroAutomation:
                 except (ValueError, KeyError):
                     logger.warning(f"Could not parse month/year from period: {period}")
             
-            # Calculate start and end dates for the month
+            # Calculate start and end dates for the month or quarter
             start_date_str = None
             end_date_str = None
             if month and year:
-                start_date_str = f"{year}-{month:02d}-01"
+                if is_quarterly:
+                    # For BAS: month is the last month of the quarter.
+                    # Roll back 2 months to get the quarter start.
+                    # e.g. month=3 (Mar) → start=Jan, month=6 (Jun) → start=Apr
+                    start_month = month - 2
+                    start_year = year
+                    if start_month < 1:
+                        start_month += 12
+                        start_year -= 1
+                    start_date_str = f"{start_year}-{start_month:02d}-01"
+                else:
+                    start_date_str = f"{year}-{month:02d}-01"
                 last_day = calendar.monthrange(year, month)[1]
                 end_date_str = f"{year}-{month:02d}-{last_day:02d}"
             
