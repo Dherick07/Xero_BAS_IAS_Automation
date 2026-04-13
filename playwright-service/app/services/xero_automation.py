@@ -16,7 +16,7 @@ import asyncio
 import os
 import re
 
-from playwright.async_api import Page, TimeoutError as PlaywrightTimeout
+from patchright.async_api import Page, TimeoutError as PlaywrightTimeout
 
 from app.services.browser_manager import BrowserManager
 from app.services.file_manager import get_file_manager
