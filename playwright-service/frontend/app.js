@@ -37,6 +37,7 @@ let pollInterval = null;
 let clientMap = {};  // tenant_name → full client object
 let isLoggedIn = false;
 let reportType = 'ias';  // 'ias' or 'bas'
+let loadClientsGeneration = 0;  // guards against stale loadClients responses
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -188,8 +189,15 @@ function hideLoginInstruction() {
 // --- Clients ---
 async function loadClients() {
   const select = $('org-input');
+  const gen = ++loadClientsGeneration;
   try {
     const data = await API.get(`/api/clients/?report_type=${reportType}`);
+
+    if (gen !== loadClientsGeneration) {
+      console.warn('[loadClients] Discarded stale response', { gen, current: loadClientsGeneration, reportType });
+      return;
+    }
+
     select.innerHTML = '<option value="">— Select organisation —</option>';
     clientMap = {};
 
@@ -208,6 +216,7 @@ async function loadClients() {
       });
     }
   } catch (e) {
+    if (gen !== loadClientsGeneration) return;
     console.error('Failed to load clients:', e);
     select.innerHTML = '<option value="" disabled>— Failed to load clients —</option>';
   }
@@ -261,8 +270,18 @@ async function handleRun() {
     ? parseInt($('quarter-select').value)
     : parseInt($('month-select').value);
 
-  if (!orgInput) { alert('Please select an organisation.'); return; }
-  if (!clientMap[orgInput]) { alert('Organisation not found. Please select from the dropdown.'); return; }
+  if (!orgInput) {
+    console.warn('[handleRun] No organisation selected', { reportType });
+    alert('Please select an organisation.');
+    return;
+  }
+  if (!clientMap[orgInput]) {
+    console.warn('[handleRun] Organisation not in clientMap', {
+      orgInput, reportType, clientMapKeys: Object.keys(clientMap)
+    });
+    alert('Organisation not found. Please select from the dropdown.');
+    return;
+  }
 
   const client = clientMap[orgInput];
 
