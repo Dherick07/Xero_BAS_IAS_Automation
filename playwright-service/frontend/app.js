@@ -8,7 +8,11 @@ const API = {
   },
 
   headers() {
-    return { 'Content-Type': 'application/json', 'X-API-Key': this.key };
+    // Only include X-API-Key once the key has been loaded (avoids sending
+    // a literal "null" string header on the very first /api/ui-config call).
+    const h = { 'Content-Type': 'application/json' };
+    if (this.key) h['X-API-Key'] = this.key;
+    return h;
   },
 
   async get(path) {
@@ -36,7 +40,14 @@ let reportType = 'ias';  // 'ias' or 'bas'
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', async () => {
-  await API.init();
+  // Wrap init in try-catch: if it fails (e.g. server not ready), all event
+  // listeners below must still be registered so the UI stays interactive.
+  try {
+    await API.init();
+  } catch (e) {
+    console.error('API init failed — UI may have limited functionality:', e);
+  }
+
   loadAuthStatus();
   loadClients();
   loadRecentRuns();
@@ -49,8 +60,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   $('btn-bas').addEventListener('click', () => setReportType('bas'));
 
   // Show client info when org is selected (useful for BAS)
+  // Using 'change' only — org-input is now a <select>, 'input' is not needed.
   $('org-input').addEventListener('change', showClientInfo);
-  $('org-input').addEventListener('input', showClientInfo);
 });
 
 // --- Report Type Toggle ---
@@ -88,6 +99,12 @@ function showClientInfo() {
 }
 
 // --- Auth ---
+function setRunBtnState(loggedIn) {
+  $('run-btn').disabled = !loggedIn;
+  const hint = $('login-required-hint');
+  if (hint) hint.style.display = loggedIn ? 'none' : 'block';
+}
+
 async function loadAuthStatus() {
   try {
     const status = await API.get('/api/auth/status');
@@ -97,19 +114,19 @@ async function loadAuthStatus() {
       badge.className = 'status-badge ok';
       badge.innerHTML = '<span class="dot"></span> Logged In';
       $('login-btn').style.display = 'none';
-      $('run-btn').disabled = false;
+      setRunBtnState(true);
     } else {
       badge.className = 'status-badge error';
       badge.innerHTML = '<span class="dot"></span> Not Logged In';
       $('login-btn').style.display = '';
-      $('run-btn').disabled = true;
+      setRunBtnState(false);
     }
   } catch {
     isLoggedIn = false;
     $('auth-badge').className = 'status-badge error';
     $('auth-badge').innerHTML = '<span class="dot"></span> Unknown';
     $('login-btn').style.display = '';
-    $('run-btn').disabled = true;
+    setRunBtnState(false);
   }
 }
 
@@ -170,19 +187,29 @@ function hideLoginInstruction() {
 
 // --- Clients ---
 async function loadClients() {
+  const select = $('org-input');
   try {
     const data = await API.get(`/api/clients/?report_type=${reportType}`);
-    const datalist = $('clients-list');
-    datalist.innerHTML = '';
+    select.innerHTML = '<option value="">— Select organisation —</option>';
     clientMap = {};
-    data.clients.forEach(c => {
-      clientMap[c.tenant_name] = c;  // Store full client object
+
+    if (data.clients.length === 0) {
       const opt = document.createElement('option');
-      opt.value = c.tenant_name;
-      datalist.appendChild(opt);
-    });
+      opt.disabled = true;
+      opt.textContent = `No ${reportType.toUpperCase()} clients configured`;
+      select.appendChild(opt);
+    } else {
+      data.clients.forEach(c => {
+        clientMap[c.tenant_name] = c;
+        const opt = document.createElement('option');
+        opt.value = c.tenant_name;
+        opt.textContent = c.tenant_name;
+        select.appendChild(opt);
+      });
+    }
   } catch (e) {
     console.error('Failed to load clients:', e);
+    select.innerHTML = '<option value="" disabled>— Failed to load clients —</option>';
   }
 }
 
@@ -235,7 +262,7 @@ async function handleRun() {
     : parseInt($('month-select').value);
 
   if (!orgInput) { alert('Please select an organisation.'); return; }
-  if (!clientMap[orgInput]) { alert('Organisation not found in the list. Please select from the dropdown.'); return; }
+  if (!clientMap[orgInput]) { alert('Organisation not found. Please select from the dropdown.'); return; }
 
   const client = clientMap[orgInput];
 
@@ -329,7 +356,8 @@ function addStep(msg, cls = '') {
 }
 
 function finishRun(success, fileName, errors) {
-  $('run-btn').disabled = !isLoggedIn;
+  // Re-enable the button based on current login state (not a hard reset)
+  setRunBtnState(isLoggedIn);
   $('run-btn').textContent = 'Run Report';
   const box = $('result-box');
   box.style.display = 'block';
